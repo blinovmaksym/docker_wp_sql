@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+
+  wordpress:
+    container_name: wordpress
+    image: wordpress
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: admin-db
+      WORDPRESS_DB_PASSWORD: 1234
+      WORDPRESS_DB_NAME: real_database_name
+    restart: always  
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - 80:80
+    depends_on:
+      - db
+    networks:
+      - my_network  
+
+  db:
+    container_name: db
+    image: mysql
+    command: '--default-authentication-plugin=mysql_native_password'
+    environment:
+      MYSQL_ROOT_PASSWORD: 1-qwerty
+      MYSQL_DATABASE: real_database_name
+      MYSQL_USER: admin-db
+      MYSQL_PASSWORD: 1234
+    restart: always     
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - 9906:3306
+    networks:
+      - my_network    
+
+  cli:
+    image: wordpress:cli
+    hostname: wp_cli
+    container_name: wp_cli
+    volumes:
+      - db_data:/var/lib/mysql
+    volumes_from:
+      - wordpress  
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: admin-db
+      WORDPRESS_DB_PASSWORD: 1234
+      WORDPRESS_DB_NAME: real_database_name
+    depends_on:
+      - db
+      - wordpress  
+    command: ["sleep", "infinity"]     
+    networks:
+      - my_network  
+  
+
+volumes:
+  db_data:
+
+networks:
+  my_network:
+   driver: bridge  
